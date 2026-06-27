@@ -92,4 +92,5 @@ Written entirely from reference manuals without vendor abstractions.
 ## Author
 
 Ayad Mohamed
-[GitHub](https://github.com/Orion-Embed) · [LinkedIn](https://www.linkedin.com/in/mohamed-ayad-688269389/?lipi=urn%3Ali%3Apage%3Ad_flagship3_profile_view_base_contact_details%3BiOz%2BoE8YQy2uH4CehR4G7A%3D%3D)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-blue?logo=linkedin)](https://www.linkedin.com/in/mohamed-ayad-688269389/?lipi=urn%3Ali%3Apage%3Ad_flagship3_profile_view_base_contact_details%3BiOz%2BoE8YQy2uH4CehR4G7A%3D%3D)
+[![GitHub](https://img.shields.io/badge/GitHub-black?logo=github)](https://github.com/Orion-Embed)
