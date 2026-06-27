@@ -1,0 +1,13 @@
+# .clangd
+CompileFlags:
+  Add:
+    - --target=arm-none-eabi
+    - -mcpu=cortex-m3
+    - -mthumb
+    - -Iinc
+  Remove:
+    - -nostdlib
+    - -nostartfiles
+
+Diagnostics:
+  UnusedIncludes: None

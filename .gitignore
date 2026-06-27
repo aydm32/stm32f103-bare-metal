@@ -1,0 +1,11 @@
+# build
+build/
+*.elf
+*.bin
+*.o
+*.map
+
+# editor / tooling
+compile_commands.json
+.clangd
+.cache/
