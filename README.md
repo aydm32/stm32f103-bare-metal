@@ -1,15 +1,9 @@
 # STM32F103C8T6 Bare-Metal Peripheral Library
 
-A from-scratch peripheral driver library for the STM32F103C8T6 (Blue Pill),
+  A from-scratch peripheral driver library for the STM32F103C8T6 (Blue Pill),
 written in C without HAL, CubeMX, or any vendor abstraction layer.
-This library is developed to build a solid bare-metal firmware foundation
-for embedded systems projects — starting with RF communication modules
-and eventually targeting flight controller hardware.
-Written entirely from reference manuals without vendor abstractions.
 
-## Philosophy
-
-Most STM32 tutorials rely on ST's HAL or CubeMX-generated code. This library
+  Most STM32 tutorials rely on ST's HAL or CubeMX-generated code. This library
 goes directly to the registers — every peripheral is configured by reading the
 reference manual and writing to memory-mapped I/O manually. This approach gives
 full control over timing, interrupt behavior, and memory layout, which is
@@ -88,15 +82,14 @@ make clean  # clean build artifacts
 
 ## Context
 
-This library is developed as part of the firmware stack for
-**OrionSat** — a 3U CubeSat project led by a six-person undergraduate
-team at ENSTSA (National Higher School of Autonomous Systems Technology),
-Algeria. The goal is a fully hand-written embedded stack with no
-vendor abstractions, suitable for flight software development.
+This library is developed to build a solid bare-metal firmware foundation
+for embedded systems projects — starting with RF communication modules
+and eventually targeting flight controller hardware.
+Written entirely from reference manuals without vendor abstractions.
 
 ---
 
 ## Author
 
 Ayad Mohamed
-[GitHub Profile] · [https://www.linkedin.com/in/mohamed-ayad-688269389/?lipi=urn%3Ali%3Apage%3Ad_flagship3_profile_view_base_contact_details%3BiOz%2BoE8YQy2uH4CehR4G7A%3D%3D]
+[GitHub](https://github.com/Orion-Embed) · [LinkedIn](https://www.linkedin.com/in/mohamed-ayad-688269389/?lipi=urn%3Ali%3Apage%3Ad_flagship3_profile_view_base_contact_details%3BiOz%2BoE8YQy2uH4CehR4G7A%3D%3D)
