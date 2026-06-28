@@ -16,4 +16,10 @@ typedef struct {
 
 #define RCC ((RCC_t *)0x40021000UL)
 
+#define RCC_APB2ENR_IOPA BIT(2) // IO port A clock enable
+#define RCC_APB2ENR_IOPB BIT(3) // IO port B clock enable
+#define RCC_APB2ENR_IOPC BIT(4) // IO port C clock enable
+
+#define RCC_APB2ENR_SPI1 BIT(12) // SPI1 Clock enable
+
 #endif // !RCC_H

@@ -1,6 +1,6 @@
 #include "gpio.h"
-#include "rcc.h"
 #include "utils.h"
+#include "rcc.h"
 
 void gpio_set_mode(uint32_t pin, uint8_t cnf, uint8_t mode) {
   uint16_t n = PINNO(pin);
