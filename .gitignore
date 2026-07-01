@@ -1,11 +1,11 @@
-# build
 build/
 *.elf
 *.bin
 *.o
 *.map
 
-# editor / tooling
+
+.clang-format
 compile_commands.json
 .clangd
 .cache/

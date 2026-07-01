@@ -1,6 +1,8 @@
+#ifndef UTILS_H
+#define UTILS_H
 
 #define BIT(x) (1UL << (x))
-#define BITS(n, x) ((n)UL << (x))
+#define BITS(n, x) ((uint32_t)(n) << (x))
 
 #define SET_BIT(REG, BIT) ((REG) |= (BIT))
 #define CLEAR_BIT(REG, BIT) ((REG) &= ~(BIT))
@@ -13,3 +15,5 @@
 #define PINBANK(pin) ((pin >> 8) & 0xFF)
 
 enum { HIGH = 1, LOW = 0 };
+
+#endif // !UTILS_H

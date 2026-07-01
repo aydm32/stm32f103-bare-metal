@@ -49,19 +49,66 @@ void spi1_init(SPI_Config cfg)
     SET_BIT(SPI1->CR1, cfg.baudrate);
 
     // ── 6. Master mode ────────────────────────────────────────────
-    SET_BIT(SPI1->CR1,SPI_CR1_MSTR);
+    SET_BIT(SPI1->CR1,SPI1_CR1_MSTR);
 
     // ── 7. Software NSS management ───────────────────────────────
     // We control CS manually via GPIO
     // SSM=1 + SSI=1 keeps internal NSS high → chip stays master
-    SET_BIT(SPI1->CR1,SPI_CR1_SSM | SPI_CR1_SSI);
+    SET_BIT(SPI1->CR1,SPI1_CR1_SSM | SPI1_CR1_SSI);
 
     // ── 8. Data frame size ────────────────────────────────────────
     if (cfg.datasize == 16) {
-        SET_BIT(SPI1->CR1,SPI_CR1_DFF);   // 16-bit mode
+        SET_BIT(SPI1->CR1,SPI1_CR1_DFF);   // 16-bit mode
     }
     // default is 8-bit, DFF=0
 
     // ── 9. Enable SPI — must be last  ─────────────────────────────
-    SET_BIT(SPI1->CR1,SPI_CR1_SPE);
+    SET_BIT(SPI1->CR1,SPI1_CR1_SPE);
 }
+
+uint8_t spi1_transfer(uint8_t data)
+{
+  while (!(SPI1->SR & SPI1_SR_TXE));   // 1. TX buffer empty
+  SPI1->DR = data;                      // 2. write
+
+  while (!(SPI1->SR & SPI1_SR_RXNE));  // 3. RX buffer has data
+  uint8_t rx = (uint8_t)SPI1->DR;      // 4. read clears RXNE
+
+  while (SPI1->SR & SPI1_SR_BSYR);     // 5. shift register done ← NEW
+  return rx;
+}
+
+void spi1_send(const uint8_t *buf, uint32_t len)
+{
+  for(uint32_t i = 0 ; i < len ; ++i)
+  {
+    spi1_transfer(buf[i]);
+  }
+}
+
+void spi1_recv(uint8_t *buf, uint32_t len)
+{
+  for (uint32_t i = 0 ; i < len ; ++i) {
+  buf[i] = spi1_transfer(0xFF);
+  }
+}
+
+void spi1_transfer_buf(const uint8_t *tx, uint8_t *rx, uint32_t len)
+{
+  for (uint32_t i = 0 ; i < len; i++) {
+    rx[i] = spi1_transfer(tx[i]);
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
