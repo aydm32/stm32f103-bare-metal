@@ -14,8 +14,8 @@ typedef struct {
   volatile uint32_t GTPR; // Guard time and prescaler register
 } USARTx_t;
 
-#define USART1 ((USARTx_t *)0x40013800)
-#define USART2 ((USARTx_t *)0x40004400)
+#define USART1 ((USARTx_t *)0x40013800UL)
+#define USART2 ((USARTx_t *)0x40004400UL)
 
 //============= Status Register (SR) =============
 #define USART_SR_PE BIT(0)   // Parity error

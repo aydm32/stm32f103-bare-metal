@@ -66,16 +66,30 @@ void spi1_init(SPI_Config cfg)
     SET_BIT(SPI1->CR1,SPI1_CR1_SPE);
 }
 
-uint8_t spi1_transfer(uint8_t data)
-{
-  while (!(SPI1->SR & SPI1_SR_TXE));   // 1. TX buffer empty
-  SPI1->DR = data;                      // 2. write
+uint8_t spi1_transfer(uint8_t data) {
+    // Check for errors before starting
+    if (SPI1->SR & (SPI1_SR_OVR | SPI1_SR_MODF | SPI1_SR_CRCERR)) {
+        // Clear error flags by reading SR and DR
+        (void)SPI1->SR;
+        (void)SPI1->DR;
+        // Reinitialize or just reset the peripheral
+        CLEAR_BIT(SPI1->CR1, SPI1_CR1_SPE);
+        SET_BIT(SPI1->CR1, SPI1_CR1_SPE);
+    }
 
-  while (!(SPI1->SR & SPI1_SR_RXNE));  // 3. RX buffer has data
-  uint8_t rx = (uint8_t)SPI1->DR;      // 4. read clears RXNE
+    while (!(SPI1->SR & SPI1_SR_TXE));
+    SPI1->DR = data;
+    while (!(SPI1->SR & SPI1_SR_RXNE));
+    uint8_t rx = (uint8_t)SPI1->DR;
+    while (SPI1->SR & SPI1_SR_BSYR);
 
-  while (SPI1->SR & SPI1_SR_BSYR);     // 5. shift register done ← NEW
-  return rx;
+    // After transfer, check for errors again
+    if (SPI1->SR & (SPI1_SR_OVR | SPI1_SR_MODF | SPI1_SR_CRCERR)) {
+        // Handle error – for simplicity, just clear and ignore
+        (void)SPI1->SR;
+        (void)SPI1->DR;
+    }
+    return rx;
 }
 
 void spi1_send(const uint8_t *buf, uint32_t len)
@@ -98,6 +112,30 @@ void spi1_transfer_buf(const uint8_t *tx, uint8_t *rx, uint32_t len)
   for (uint32_t i = 0 ; i < len; i++) {
     rx[i] = spi1_transfer(tx[i]);
   }
+}
+
+uint16_t spi1_transfer16(uint16_t data) {
+    while (!(SPI1->SR & SPI1_SR_TXE));
+    SPI1->DR = data;  // 16‑bit write
+    while (!(SPI1->SR & SPI1_SR_RXNE));
+    uint16_t rx = (uint16_t)SPI1->DR;
+    while (SPI1->SR & SPI1_SR_BSYR);
+    return rx;
+}
+
+void spi1_send16(const uint16_t *buf, uint32_t len) {
+    for (uint32_t i = 0; i < len; i++)
+        spi1_transfer16(buf[i]);
+}
+
+void spi1_recv16(uint16_t *buf, uint32_t len) {
+    for (uint32_t i = 0; i < len; i++)
+        buf[i] = spi1_transfer16(0xFFFF);
+}
+
+void spi1_transfer_buf16(const uint16_t *tx, uint16_t *rx, uint32_t len) {
+    for (uint32_t i = 0; i < len; i++)
+        rx[i] = spi1_transfer16(tx[i]);
 }
 
 

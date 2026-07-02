@@ -86,9 +86,9 @@ typedef struct {
 #define SPI_I2SPR_ODD BIT(8)   // Odd factor for the Prescaler
 
 // CS control — caller defines which pin
-// Usage: SPI1_CS_LOW(GPIOA, 4)
-#define SPI_CS_LOW(port, pin) SET_BIT((port)->BSRR, (pin) + 16)
-#define SPI_CS_HIGH(port, pin) SET_BIT((port)->BSRR, (pin))
+// For PA4 (default CS on Blue Pill)
+static inline void spi1_cs_low(void) { SET_BIT(GPIO('A')->BSRR, BIT(4 + 16)); }
+static inline void spi1_cs_high(void) { SET_BIT(GPIO('A')->BSRR, BIT(4)); }
 
 typedef struct {
   uint8_t mode;      // 0,1,2,3 → CPOL/CPHA combination
@@ -97,9 +97,16 @@ typedef struct {
 } SPI_Config;
 
 void spi1_init(SPI_Config cfg);
+// If SPI function for 8-bit format as default (DFF = 0)
 uint8_t spi1_transfer(uint8_t data);
 void spi1_send(const uint8_t *buf, uint32_t len);
 void spi1_recv(uint8_t *buf, uint32_t len);
 void spi1_transfer_buf(const uint8_t *tx, uint8_t *rx, uint32_t len);
+
+// If DFF = 1 we need to use 16-bit format
+uint16_t spi1_transfer16(uint16_t data);
+void spi1_send16(const uint16_t *buf, uint32_t len);
+void spi1_recv16(uint16_t *buf, uint32_t len);
+void spi1_transfer_buf16(const uint16_t *tx, uint16_t *rx, uint32_t len);
 
 #endif // !SPI_T
