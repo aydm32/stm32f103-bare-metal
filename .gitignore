@@ -3,8 +3,7 @@ build/
 *.bin
 *.o
 *.map
-
-
+.clang
 .clang-format
 compile_commands.json
 .clangd
