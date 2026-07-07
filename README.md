@@ -16,25 +16,22 @@ essential in resource-constrained embedded systems.
 | Module | File | Status |
 |--------|------|--------|
 | GPIO | `src/gpio.c` | ✅ Complete |
-| RCC (clock configuration) | `inc/rcc.h` | ✅ Complete |
-| SPI | `src/spi.c` | 🔧 In progress |
+| RCC (clock configuration) | `src/rcc.c` | ✅ Complete |
+| SPI | `src/spi.c` | 🔧 Complete |
+| UART | `src/uart.c` | 🔧 Complete |
 | NRF24L01 RF driver | — | 📋 Planned |
 
 ---
 
 ## Project Structure
 
+```
 ├── src/          # Driver implementations
-
 ├── inc/          # Header files
-
 ├── linker/       # Custom linker script (stm32f103c8.ld)
+└── build/        # Compiled output (ELF, BIN)
 
-├── build/        # Compiled output (ELF, BIN)
-
-├── Makefile      # Bare-metal build system
-
-└── startup.c     # Hand-written vector table and reset handler
+```
 
 ---
 
@@ -63,6 +60,7 @@ make clean  # clean build artifacts
 - **MCU:** STM32F103C8T6 (Blue Pill, 72MHz Cortex-M3)
 - **Programmer:** ST-Link V2
 - **Planned:** NRF24L01+ 2.4GHz RF module over SPI
+- Testing: Arduino Nano
 
 ---
 
@@ -72,9 +70,9 @@ make clean  # clean build artifacts
 - [x] RCC clock configuration
 - [x] Custom startup file and vector table
 - [x] Custom linker script
-- [ ] SPI driver (in progress)
+- [x] SPI driver (in progress)
+- [x] UART driver
 - [ ] NRF24L01 driver on top of SPI
-- [ ] UART driver
 - [ ] Timer / PWM driver
 - [ ] I2C driver
 
