@@ -61,6 +61,33 @@ typedef struct {
 #define RCC_APB1ENR_BKP BIT(27)    // Backup interface
 #define RCC_APB1ENR_PWR BIT(28)    // Power control
 
-void rcc_init(void);
+/* ── CFGR bits used during clock configuration ── */
+#define RCC_CFGR_PLLSRC_HSE BIT(16)
+#define RCC_CFGR_PLLMUL9 (7UL << 18) // HSE(8MHz) * 9 = 72MHz
+#define RCC_CFGR_SW_PLL (2UL << 0)
+#define RCC_CFGR_SWS_MASK (3UL << 2)
+#define RCC_CFGR_SWS_PLL (2UL << 2)
+#define RCC_CFGR_PPRE1_DIV2 (4UL << 8)
+
+/* ── Flash access control register (needed for wait states) ── */
+#define FLASH_ACR (*(volatile uint32_t *)0x40022000UL)
+
+/* rcc_init return codes — lets the caller detect a dead crystal or a PLL
+ * that never locks instead of hanging forever with no diagnostic output. */
+typedef enum {
+  RCC_OK = 0,
+  RCC_ERR_HSE_TIMEOUT,
+  RCC_ERR_PLL_TIMEOUT,
+} rcc_status_t;
+
+rcc_status_t rcc_init(void);
+
+/* Diagnostic-only: leaves the chip on its power-on-reset default (HSI,
+ * 8 MHz, no PLL). Use this temporarily to check whether rcc_init() is
+ * failing specifically at the HSE/crystal step — if the board boots and
+ * ticks normally with this instead, the crystal or its load caps are the
+ * problem, not your PLL configuration. Not meant to stay in the final
+ * build: 8 MHz is far slower than your target 72 MHz. */
+rcc_status_t rcc_init_hsi_only(void);
 
 #endif // RCC_H

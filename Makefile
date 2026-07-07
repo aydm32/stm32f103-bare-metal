@@ -7,7 +7,7 @@ CFLAGS  = -mcpu=cortex-m3 -mthumb -O1 -Wall -Wextra -Iinc -nostdlib
 LDFLAGS = -mcpu=cortex-m3 -mthumb -nostdlib -nostartfiles \
           -T linker/stm32f103c8.ld
 
-SRCS = src/startup.c src/gpio.c src/main.c
+SRCS = src/startup.c src/gpio.c src/main.c src/rcc.c src/uart.c src/spi.c 
 OBJS = $(patsubst src/%.c, build/%.o, $(SRCS))
 
 all: build/$(TARGET).elf build/$(TARGET).bin

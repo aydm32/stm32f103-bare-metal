@@ -6,90 +6,77 @@
 
 void spi1_init(SPI_Config cfg)
 {
-    // ── 1. Enable clocks ──────────────────────────────────────────
-   SET_BIT(RCC->APB2ENR, RCC_APB2ENR_SPI1); 
-   SET_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPA);
-    // ── 2. Configure GPIO pins ────────────────────────────────────
-    // SPI1 pins on Blue Pill:
-    // PA5 = SCK  → AF push-pull output (CNF=10 MODE=11 = 0xB)
-    // PA6 = MISO → floating input      (CNF=01 MODE=00 = 0x4)
-    // PA7 = MOSI → AF push-pull output (CNF=10 MODE=11 = 0xB)
-    // PA4 = NSS  → GPIO output manual  (CNF=00 MODE=11 = 0x3)
-    GPIOx_t *GPIOA = GPIO('A'); 
-    // Clear PA4, PA5, PA6, PA7 (bits 16-31 of CRL)
-    GPIOA->CRL &= ~(0xFFFF << 16);
+   // 1. Clocks
+    SET_BIT(RCC->APB2ENR, RCC_APB2ENR_IOPA);
+    SET_BIT(RCC->APB2ENR, RCC_APB2ENR_SPI1);
 
-    GPIOA->CRL |= (0x3 << 16);   // PA4 output push-pull 50MHz (manual CS)
-    GPIOA->CRL |= (0xB << 20);   // PA5 SCK  AF push-pull
-    GPIOA->CRL |= (0x4 << 24);   // PA6 MISO floating input
-    GPIOA->CRL |= (0xB << 28);   // PA7 MOSI AF push-pull
+    // 2. GPIO
+    // cfg.cs_pin → output PP manual CS (caller picks the pin; SCK/MISO/MOSI
+    //              stay fixed to PA5/PA6/PA7 since those are wired to the
+    //              SPI1 peripheral itself and can't move)
+    // PA5 SCK  → AF push-pull
+    // PA6 MISO → floating input
+    // PA7 MOSI → AF push-pull
+    gpio_set_mode(cfg.cs_pin,  GPIO_CNF_OUT_PP,   GPIO_MODE_OUT_50MHZ);
+    gpio_set_mode(PIN('A', 5), GPIO_CNF_OUT_AFPP, GPIO_MODE_OUT_50MHZ);
+    gpio_set_mode(PIN('A', 6), GPIO_CNF_IN_FLOAT,  GPIO_MODE_INPUT);
+    gpio_set_mode(PIN('A', 7), GPIO_CNF_OUT_AFPP, GPIO_MODE_OUT_50MHZ);
 
     // CS idle high
-    GPIOA->BSRR = (1 << 4);
+    gpio_set(cfg.cs_pin, HIGH);
 
-    // ── 3. Reset SPI1 before configuring ─────────────────────────
+    // 3. Configure SPI1
     SPI1->CR1 = 0;
     SPI1->CR2 = 0;
-    
-    // ── 4. Set clock mode (CPOL + CPHA) ──────────────────────────
-    // Mode 0: CPOL=0 CPHA=0 
-    // Mode 1: CPOL=0 CPHA=1
-    // Mode 2: CPOL=1 CPHA=0
-    // Mode 3: CPOL=1 CPHA=1
+
+    // 4. Mode (CPOL + CPHA)
     switch (cfg.mode) {
-        case 0: /* CPOL=0 CPHA=0 — default, nothing to set */ break;
-        case 1: SET_BIT(SPI1->CR1, SPI1_CR1_CPHA); break;
-        case 2: SET_BIT(SPI1->CR1, SPI1_CR1_CPOL); break;
-        case 3: SET_BIT(SPI1->CR1, SPI1_CR1_CPHA | SPI1_CR1_CPOL); break;
+        case 0: break;
+        case 1: SET_BIT(SPI1->CR1, SPI_CR1_CPHA); break;
+        case 2: SET_BIT(SPI1->CR1, SPI_CR1_CPOL); break;
+        case 3: SET_BIT(SPI1->CR1, SPI_CR1_CPOL | SPI_CR1_CPHA); break;
     }
 
-    // ── 5. Set baud rate ──────────────────────────────────────────
-    // Baud divides APB2 clock (72MHz at full speed)
-    // Use cfg.baudrate = SPI_CR1_BR_DIV8 for 9MHz
-    SET_BIT(SPI1->CR1, cfg.baudrate);
+    // 5. Baud rate
+    MODIFY_REG(SPI1->CR1, BITS(0x7, 3), cfg.baudrate);
 
-    // ── 6. Master mode ────────────────────────────────────────────
-    SET_BIT(SPI1->CR1,SPI1_CR1_MSTR);
+    // 6. Master + software NSS
+    SET_BIT(SPI1->CR1, SPI_CR1_MSTR | SPI_CR1_SSM | SPI_CR1_SSI);
 
-    // ── 7. Software NSS management ───────────────────────────────
-    // We control CS manually via GPIO
-    // SSM=1 + SSI=1 keeps internal NSS high → chip stays master
-    SET_BIT(SPI1->CR1,SPI1_CR1_SSM | SPI1_CR1_SSI);
+    // 7. Data size
+    if (cfg.datasize == 16)
+        SET_BIT(SPI1->CR1, SPI_CR1_DFF);
 
-    // ── 8. Data frame size ────────────────────────────────────────
-    if (cfg.datasize == 16) {
-        SET_BIT(SPI1->CR1,SPI1_CR1_DFF);   // 16-bit mode
-    }
-    // default is 8-bit, DFF=0
-
-    // ── 9. Enable SPI — must be last  ─────────────────────────────
-    SET_BIT(SPI1->CR1,SPI1_CR1_SPE);
+    // 8. Enable — last
+    SET_BIT(SPI1->CR1, SPI_CR1_SPE);
 }
 
+// Bare transfer, no error-flag checking. During bring-up you want this path
+// as short as possible: TXE wait -> write -> RXNE wait -> read -> BSY wait.
+// If SPI comes back wrong here, the bug is almost always wiring, clock mode,
+// or baud rate — not MODF/OVR — so checking those flags on every byte just
+// adds cycles without adding information at this stage.
 uint8_t spi1_transfer(uint8_t data) {
-    // Check for errors before starting
-    if (SPI1->SR & (SPI1_SR_OVR | SPI1_SR_MODF | SPI1_SR_CRCERR)) {
-        // Clear error flags by reading SR and DR
-        (void)SPI1->SR;
-        (void)SPI1->DR;
-        // Reinitialize or just reset the peripheral
-        CLEAR_BIT(SPI1->CR1, SPI1_CR1_SPE);
-        SET_BIT(SPI1->CR1, SPI1_CR1_SPE);
-    }
-
-    while (!(SPI1->SR & SPI1_SR_TXE));
+    while (!(SPI1->SR & SPI_SR_TXE));
     SPI1->DR = data;
-    while (!(SPI1->SR & SPI1_SR_RXNE));
+    while (!(SPI1->SR & SPI_SR_RXNE));
     uint8_t rx = (uint8_t)SPI1->DR;
-    while (SPI1->SR & SPI1_SR_BSYR);
+    while (SPI1->SR & SPI_SR_BSY);
+    return rx;
+}
 
-    // After transfer, check for errors again
-    if (SPI1->SR & (SPI1_SR_OVR | SPI1_SR_MODF | SPI1_SR_CRCERR)) {
-        // Handle error – for simplicity, just clear and ignore
+// Explicit fault recovery — call this yourself if you suspect a bus error
+// (e.g. after adding a second SPI master on the bus in a later phase, where
+// MODF becomes a real possibility). Reading SR then DR clears MODF/OVR/
+// CRCERR per the reference manual; toggling SPE reinitializes the shift
+// logic in case a transfer was left mid-frame.
+void spi1_clear_errors(void) {
+    if (SPI1->SR & (SPI_SR_OVR | SPI_SR_MODF | SPI_SR_CRCERR)) {
         (void)SPI1->SR;
         (void)SPI1->DR;
+        CLEAR_BIT(SPI1->CR1, SPI_CR1_SPE);
+        SET_BIT(SPI1->CR1, SPI_CR1_SPE);
     }
-    return rx;
 }
 
 void spi1_send(const uint8_t *buf, uint32_t len)
@@ -114,12 +101,13 @@ void spi1_transfer_buf(const uint8_t *tx, uint8_t *rx, uint32_t len)
   }
 }
 
-uint16_t spi1_transfer16(uint16_t data) {
-    while (!(SPI1->SR & SPI1_SR_TXE));
+/* 
+  uint16_t spi1_transfer16(uint16_t data) {
+    while (!(SPI1->SR & SPI_SR_TXE));
     SPI1->DR = data;  // 16‑bit write
-    while (!(SPI1->SR & SPI1_SR_RXNE));
+    while (!(SPI1->SR & SPI_SR_RXNE));
     uint16_t rx = (uint16_t)SPI1->DR;
-    while (SPI1->SR & SPI1_SR_BSYR);
+    while (SPI1->SR & SPI_SR_BSYR);
     return rx;
 }
 
@@ -138,7 +126,7 @@ void spi1_transfer_buf16(const uint16_t *tx, uint16_t *rx, uint32_t len) {
         rx[i] = spi1_transfer16(tx[i]);
 }
 
-
+*/
 
 
 

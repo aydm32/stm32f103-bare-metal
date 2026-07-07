@@ -50,7 +50,7 @@ typedef struct {
 #define SPI_CR2_RXDMAEN BIT(0) // Rx buffer DMA enable
 
 //==================== SPI1 - Status Register - Bits
-#define SPI_SR_BSYR BIT(7)   // Busy flag
+#define SPI_SR_BSY BIT(7)    // Busy flag
 #define SPI_SR_OVR BIT(6)    // Overrun flag
 #define SPI_SR_MODF BIT(5)   // Mode fault
 #define SPI_SR_CRCERR BIT(4) // CRC error flag
@@ -59,54 +59,23 @@ typedef struct {
 #define SPI_SR_TXE BIT(1)    // Transmit buffer empty
 #define SPI_SR_RXNE BIT(0)   // Receive buffer not empty
 
-// ================= SPI1 - SPI_I2S Configuration register - Bits
-#define SPI_I2SCFG_I2SMOD BIT(11) // I2S mode selection
-#define SPI_I2SCFG_I2SE BIT(10)   // I2S Enable
-#define SPI_I2SCFG_I2SCFG_ST                                                   \
-  BITS(0, 9) // I2S Configuration mode - Slave - transmit
-#define SPI_I2SCFG_I2SCFG_SR BITS(1, 9) // Slave - receive
-#define SPI_I2SCFG_I2SCFG_MT BITS(2, 9) // Master - transmit
-#define SPI_I2SCFG_I2SCFG_MR BITS(3, 9) // Master - receive
-#define SPI_I2SCFG_PCMSYNC BIT(7)       // PCM frame synchronization
-#define SPI_I2SCFG_I2SSTD_I2S                                                  \
-  BITS(0, 5) // I2S standard selection - I2S Philips standard
-#define SPI_I2SCFG_I2SSTD_MSB BITS(1, 5) // MSB justified standard
-#define SPI_I2SCFG_I2SSTD_LSB BITS(2, 5) // LSB justified standard
-#define SPI_I2SCFG_I2SSTD_PCM BITS(3, 5) // PCM standard
-#define SPI_I2SCFG_I2SSTD_CKPOL BIT(3)   // Steady state clock polarity
-#define SPI_I2SCFG_DATLEM_16BIT                                                \
-  BITS(0, 2) // Data length to be transferred - 16-bit data length
-#define SPI_I2SCFG_DATLEM_24BIT BITS(1, 2) // 24-bit data length
-#define SPI_I2SCFG_DATLEM_32BIT BITS(2, 2) // 32-bit data length
-#define SPI_I2SCFG_CHLEN                                                       \
-  BIT(0) // Channel length (number of bits per audio channeil)
-
-//=============== Prescaler register ==================
-#define SPI_I2SPR_MCKOE BIT(9) // Master clock output enable
-#define SPI_I2SPR_ODD BIT(8)   // Odd factor for the Prescaler
-
-// CS control — caller defines which pin
-// For PA4 (default CS on Blue Pill)
-static inline void spi1_cs_low(void) { SET_BIT(GPIO('A')->BSRR, BIT(4 + 16)); }
-static inline void spi1_cs_high(void) { SET_BIT(GPIO('A')->BSRR, BIT(4)); }
-
 typedef struct {
   uint8_t mode;      // 0,1,2,3 → CPOL/CPHA combination
   uint32_t baudrate; // use SPI_CR1_BR_DIVx defines
   uint8_t datasize;  // 8 or 16
+  uint32_t cs_pin;   // PIN('A', 4) etc — CS is now caller-configurable
+                     // instead of hardcoded, since NRF24L01 and any future
+                     // second device will each want their own CS pin
 } SPI_Config;
 
 void spi1_init(SPI_Config cfg);
-// If SPI function for 8-bit format as default (DFF = 0)
 uint8_t spi1_transfer(uint8_t data);
 void spi1_send(const uint8_t *buf, uint32_t len);
 void spi1_recv(uint8_t *buf, uint32_t len);
 void spi1_transfer_buf(const uint8_t *tx, uint8_t *rx, uint32_t len);
 
-// If DFF = 1 we need to use 16-bit format
-uint16_t spi1_transfer16(uint16_t data);
-void spi1_send16(const uint16_t *buf, uint32_t len);
-void spi1_recv16(uint16_t *buf, uint32_t len);
-void spi1_transfer_buf16(const uint16_t *tx, uint16_t *rx, uint32_t len);
+// Call manually if you need to recover from a bus fault (MODF/OVR/CRCERR).
+// Not called automatically inside spi1_transfer during bring-up — see spi.c.
+void spi1_clear_errors(void);
 
-#endif // !SPI_T
+#endif // !SPI_H
