@@ -15,12 +15,12 @@ essential in resource-constrained embedded systems.
 
 | Module | File | Status |
 |--------|------|--------|
-| GPIO | `src/gpio.c` | ✅ Complete |
-| RCC (clock configuration) | `src/rcc.c` | ✅ Complete |
-| SPI | `src/spi.c` | 🔧 Complete |
-| UART | `src/uart.c` | 🔧 Complete |
-| PWM  | — | 📋 Planned |
-| I2C  | — | 📋 Planned |
+| GPIO | `src/gpio.c` | Complete |
+| RCC (clock configuration) | `src/rcc.c` | Complete |
+| SPI | `src/spi.c` | Complete |
+| UART | `src/uart.c` | Complete |
+| PWM  | — | Planned |
+| I2C  | — | Planned |
 
 ---
 
@@ -61,8 +61,7 @@ make clean  # clean build artifacts
 
 - **MCU:** STM32F103C8T6 (Blue Pill, 72MHz Cortex-M3)
 - **Programmer:** ST-Link V2
-- **Planned:** NRF24L01+ 2.4GHz RF module over SPI
-- Testing: Arduino Nano
+- **Testing**: Arduino Nano
 
 ---
 
