@@ -31,5 +31,6 @@ void uart1_init_hz(uint32_t baud, uint32_t apb2_clock_hz);
 void uart1_send_byte(uint8_t c);
 void uart1_send_string(const char *s);
 uint8_t uart1_recv_byte(void);
+void uart1_send_hex_byte(uint8_t val);
 
 #endif // !UART_H

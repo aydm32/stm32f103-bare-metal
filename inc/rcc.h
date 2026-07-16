@@ -72,8 +72,6 @@ typedef struct {
 /* ── Flash access control register (needed for wait states) ── */
 #define FLASH_ACR (*(volatile uint32_t *)0x40022000UL)
 
-/* rcc_init return codes — lets the caller detect a dead crystal or a PLL
- * that never locks instead of hanging forever with no diagnostic output. */
 typedef enum {
   RCC_OK = 0,
   RCC_ERR_HSE_TIMEOUT,
@@ -81,13 +79,5 @@ typedef enum {
 } rcc_status_t;
 
 rcc_status_t rcc_init(void);
-
-/* Diagnostic-only: leaves the chip on its power-on-reset default (HSI,
- * 8 MHz, no PLL). Use this temporarily to check whether rcc_init() is
- * failing specifically at the HSE/crystal step — if the board boots and
- * ticks normally with this instead, the crystal or its load caps are the
- * problem, not your PLL configuration. Not meant to stay in the final
- * build: 8 MHz is far slower than your target 72 MHz. */
-rcc_status_t rcc_init_hsi_only(void);
 
 #endif // RCC_H

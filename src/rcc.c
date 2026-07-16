@@ -1,10 +1,6 @@
 #include "rcc.h"
 #include "utils.h"
 
-/* Loop-iteration budget for the two hardware-lock waits below. This isn't a
- * calibrated microsecond timeout — it's a "don't hang forever on dead
- * hardware" guard so a bad crystal or bench-power glitch gives you a status
- * code instead of a silent lockup with no serial output to explain why. */
 #define RCC_LOCK_TIMEOUT 100000UL
 
 rcc_status_t rcc_init(void) {
@@ -36,7 +32,6 @@ rcc_status_t rcc_init(void) {
     MODIFY_REG(RCC->CFGR, (3UL << 0), RCC_CFGR_SW_PLL);
 
     // 6. Wait until PLL is used as system clock
-    //    (this one always resolves once step 5 lands, so no timeout needed)
     while (READ_BIT(RCC->CFGR, RCC_CFGR_SWS_MASK) != RCC_CFGR_SWS_PLL)
         ;
 
@@ -47,11 +42,3 @@ rcc_status_t rcc_init(void) {
     return RCC_OK;
 }
 
-rcc_status_t rcc_init_hsi_only(void) {
-    // HSI is already the running clock source at reset — nothing to enable.
-    // This function exists purely so main.c has a symmetrical, obviously-
-    // temporary call site to swap to for the isolation test. No PLL, no
-    // wait-state change needed: 8 MHz Flash access needs 0 wait states,
-    // which is already the reset default.
-    return RCC_OK;
-}

@@ -64,8 +64,6 @@ typedef struct {
   uint32_t baudrate; // use SPI_CR1_BR_DIVx defines
   uint8_t datasize;  // 8 or 16
   uint32_t cs_pin;   // PIN('A', 4) etc — CS is now caller-configurable
-                     // instead of hardcoded, since NRF24L01 and any future
-                     // second device will each want their own CS pin
 } SPI_Config;
 
 void spi1_init(SPI_Config cfg);
@@ -73,9 +71,13 @@ uint8_t spi1_transfer(uint8_t data);
 void spi1_send(const uint8_t *buf, uint32_t len);
 void spi1_recv(uint8_t *buf, uint32_t len);
 void spi1_transfer_buf(const uint8_t *tx, uint8_t *rx, uint32_t len);
-
-// Call manually if you need to recover from a bus fault (MODF/OVR/CRCERR).
-// Not called automatically inside spi1_transfer during bring-up — see spi.c.
 void spi1_clear_errors(void);
 
+// This the functions prototype of the 16-bit transfer
+
+/*
+void spi1_send16(const uint16_t *buf, uint32_t len);
+void spi1_recv16(uint16_t *buf, uint32_t len);
+void spi1_transfer_buf16(const uint16_t *tx, uint16_t *rx, uint32_t len);
+*/
 #endif // !SPI_H

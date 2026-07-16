@@ -14,11 +14,7 @@ void uart1_init_hz(uint32_t baud, uint32_t apb2_clock_hz)
 gpio_set_mode(PIN('A', 9), GPIO_CNF_OUT_AFPP, GPIO_MODE_OUT_50MHZ);
 gpio_set_mode(PIN('A', 10),GPIO_CNF_IN_FLOAT,GPIO_MODE_INPUT);
  
- // 3. Baud rate — driven by whatever clock is actually running APB2 right
- //    now, not a hardcoded assumption. This matters the moment you switch
- //    between rcc_init() (72MHz) and rcc_init_hsi_only() (8MHz) for testing
- //    — using the wrong constant here gives you a wrong baud rate and
- //    garbled output even though the UART itself is working correctly.
+ // 3. Baud rate 
 USART1->BRR = apb2_clock_hz / baud;
 
 // 4. Enable TX + RX + USART 
@@ -44,3 +40,14 @@ uint8_t uart1_recv_byte(void) {
 void uart1_send_string(const char *s) {
     while (*s) uart1_send_byte((uint8_t)*s++);
  }
+
+static char nibble_to_hex(uint8_t n) {
+    return (n < 10) ? ('0' + n) : ('A' + (n - 10));
+}
+ 
+void uart1_send_hex_byte(uint8_t val) {
+    uart1_send_string("0x");
+    uart1_send_byte((uint8_t)nibble_to_hex((val >> 4) & 0xF));
+    uart1_send_byte((uint8_t)nibble_to_hex(val & 0xF));
+}
+

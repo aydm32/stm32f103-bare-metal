@@ -11,9 +11,6 @@ void spi1_init(SPI_Config cfg)
     SET_BIT(RCC->APB2ENR, RCC_APB2ENR_SPI1);
 
     // 2. GPIO
-    // cfg.cs_pin → output PP manual CS (caller picks the pin; SCK/MISO/MOSI
-    //              stay fixed to PA5/PA6/PA7 since those are wired to the
-    //              SPI1 peripheral itself and can't move)
     // PA5 SCK  → AF push-pull
     // PA6 MISO → floating input
     // PA7 MOSI → AF push-pull
@@ -51,11 +48,6 @@ void spi1_init(SPI_Config cfg)
     SET_BIT(SPI1->CR1, SPI_CR1_SPE);
 }
 
-// Bare transfer, no error-flag checking. During bring-up you want this path
-// as short as possible: TXE wait -> write -> RXNE wait -> read -> BSY wait.
-// If SPI comes back wrong here, the bug is almost always wiring, clock mode,
-// or baud rate — not MODF/OVR — so checking those flags on every byte just
-// adds cycles without adding information at this stage.
 uint8_t spi1_transfer(uint8_t data) {
     while (!(SPI1->SR & SPI_SR_TXE));
     SPI1->DR = data;
@@ -65,11 +57,6 @@ uint8_t spi1_transfer(uint8_t data) {
     return rx;
 }
 
-// Explicit fault recovery — call this yourself if you suspect a bus error
-// (e.g. after adding a second SPI master on the bus in a later phase, where
-// MODF becomes a real possibility). Reading SR then DR clears MODF/OVR/
-// CRCERR per the reference manual; toggling SPE reinitializes the shift
-// logic in case a transfer was left mid-frame.
 void spi1_clear_errors(void) {
     if (SPI1->SR & (SPI_SR_OVR | SPI_SR_MODF | SPI_SR_CRCERR)) {
         (void)SPI1->SR;
@@ -101,6 +88,8 @@ void spi1_transfer_buf(const uint8_t *tx, uint8_t *rx, uint32_t len)
   }
 }
 
+// This function are for 16-bit data transfer 
+// You need to Enable 16-bit transfer via DFF = 1 
 /* 
   uint16_t spi1_transfer16(uint16_t data) {
     while (!(SPI1->SR & SPI_SR_TXE));

@@ -19,7 +19,8 @@ essential in resource-constrained embedded systems.
 | RCC (clock configuration) | `src/rcc.c` | ✅ Complete |
 | SPI | `src/spi.c` | 🔧 Complete |
 | UART | `src/uart.c` | 🔧 Complete |
-| NRF24L01 RF driver | — | 📋 Planned |
+| PWM  | — | 📋 Planned |
+| I2C  | — | 📋 Planned |
 
 ---
 
@@ -42,6 +43,7 @@ essential in resource-constrained embedded systems.
 - Flashing: `st-flash` (ST-Link v2)
 - OS: Void Linux (works on any Linux distro)
 - No IDE, no CubeMX, no HAL
+- Text Editor: Neovim (Lazyvim)
 
 ---
 
@@ -70,9 +72,8 @@ make clean  # clean build artifacts
 - [x] RCC clock configuration
 - [x] Custom startup file and vector table
 - [x] Custom linker script
-- [x] SPI driver (in progress)
+- [x] SPI driver
 - [x] UART driver
-- [ ] NRF24L01 driver on top of SPI
 - [ ] Timer / PWM driver
 - [ ] I2C driver
 
@@ -82,7 +83,7 @@ make clean  # clean build artifacts
 
 This library is developed to build a solid bare-metal firmware foundation
 for embedded systems projects — starting with RF communication modules
-and eventually targeting flight controller hardware.
+and extended to other famous modules, targeting flight controller hardware.
 Written entirely from reference manuals without vendor abstractions.
 
 ---
